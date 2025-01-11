@@ -1,0 +1,15 @@
+/* Style for the canvas */
+canvas {
+    border: 1px solid #000; /* Border for visibility */
+    margin: 20px auto; /* Center the canvas */
+    display: block; /* Ensures the canvas is displayed as a block element */
+    background-color: #f4f4f4; /* Light gray background for the canvas */
+}
+
+/* Optional: Additional styling for the parent container */
+#pageContent {
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    max-width: 1400px; /* Restrict container width */
+}

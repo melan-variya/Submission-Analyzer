@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Codeforces Problem Extractor",
+    "version": "1.0",
+    "description": "Extract contest ID and problem index from Codeforces problem URLs.",
+    "permissions": ["activeTab", "scripting"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://codeforces.com/problemset/problem/*", "https://codeforces.com/contest/*","https://codeforces.com/contest/2049/submission/*"],
+            "js": ["content.js"]
+        }
+    ],
+    "action": {
+        "default_title": "Extract Contest Info"
+    }
+}
