@@ -2,10 +2,10 @@
  * Extract the contest ID and problem index from a Codeforces problem URL.
  * @returns {void}
 */
-// const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
-// const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-// const targetElement2 = result2.singleNodeValue;
-// console.log(targetElement2.textContent);
+const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
+const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+const targetElement2 = result2.singleNodeValue;
+console.log(targetElement2.textContent);
 
 
 function extractContestAndProblem() {
@@ -65,7 +65,7 @@ function extractContestAndProblem() {
  * @returns {void}
  */
 async function fetchSubmissionsData(contestID, problemIndex) {
-    const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=10000`;
+    const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=100000`;
 
     try {
         const response = await fetch(apiUrl);
@@ -121,6 +121,10 @@ let relative_to_max_without_0 = new Array(250).fill(0);
 let index_of_non_zero = new Array();
 
 let max_time = 0;
+
+let locate_time;
+let bar_number;
+
 function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
     // let map2 = new Array(250).fill(0);  // For memory consumed (mod 10)
 
@@ -148,9 +152,21 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         okSubmissions.forEach(submission => {
             
             // submissionDetails += `Submission ID: ${submission.id} | 
-                // Time Consumed: ${submission.timeConsumedMillis} ms | 
-                // Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
+            //     Time Consumed: ${submission.timeConsumedMillis} ms | 
+            //     Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
 
+                if (submission.id == targetElement2.textContent) {
+                    // console.log("Matching submission found:");
+                    // console.log("Submission ID:", submission.id);
+                    console.log("Time Consumed (ms):", submission.timeConsumedMillis);
+                    locate_time=submission.timeConsumedMillis;
+                    bar_number = Math.floor(submission.timeConsumedMillis / 10);
+                    console.log(bar_number);
+                } 
+                // console.log("Matching submission found:");
+                // console.log("Submission ID:", submission.id);
+                // console.log("Time Consumed (ms):", submission.timeConsumedMillis);
+                
             // Increment counts in time_consumed and map2 based on mod 10
             time_consumed[Math.floor(submission.timeConsumedMillis / 10)] += 1; // Use Math.floor to ensure correct indexing
             // map2[Math.floor(submission.memoryConsumedBytes / 10)] += 1; // Same here
@@ -159,6 +175,19 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             }
         });
 
+        // finding location of bar for printing photo
+        let cou=0;
+        for (let index = 0; index < bar_number; index++) {
+            const element = time_consumed[index];
+            if(element==0){
+                cou++;
+            }
+            
+        }
+        if(cou){
+            cou--;
+        }
+        bar_number-=cou;
         // Add counts for time consumed
         // submissionDetails += "<strong>Time Consumed Distribution:</strong><br>";
         time_consumed.forEach((value, index) => {
@@ -215,6 +244,8 @@ canvas.height = 500; // Set canvas height
 
 const ctx = canvas.getContext('2d');
 
+let photox,photoy;
+
 function draw_graph() {
     // Filter non-zero values from submission_id and relative_to_max
     const relative_to_max_without_0 = relative_to_max.filter(value => value !== 0);
@@ -260,7 +291,6 @@ function draw_graph() {
     for (let index = 0; index < relative_to_max_without_0.length; index++) {
         const value = relative_to_max_without_0[index];
         const barHeight = (value / maxValue) * maxBarHeight; // Scale the bar height
-
         // Set minimum bar height to 5 pixels
         const finalBarHeight = barHeight < 5 ? 5 : barHeight;
 
@@ -283,7 +313,16 @@ function draw_graph() {
         ctx.fillStyle = '#000';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
-
+        
+        // if(index_of_non_zero[index]==(parseInt((locate_time)/10))*10){
+        //     photox= x + barWidth / 2;
+        //     //     // photoy=yOffset + 15;
+        // }
+        // console.log((parseInt((locate_time)/10))*10);
+        // // for (let index = 0; index < index_of_non_zero.length; index++) {
+        // //     console.log(index_of_non_zero[index]);
+            
+        // }
         // Check if current index is divisible by 100
         if (index_of_non_zero[index] % 100 === 0) {
             ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
@@ -307,7 +346,17 @@ function draw_graph() {
             }
         }
     }
+    //finding location of photo
 
+    // console.log('barheight'+bars[bar_number-1].height);
+    // bars.forEach(height => {
+    //     console.log(height);
+    // });
+    // console.log("bar_height" + bar_number-1);
+    photox=bars[bar_number-1].x+barWidth/2;
+    // photoy=bars[bar_number-1].y+bars[bar_number-1].height-100;
+    photoy=450-bars[bar_number-1].height-80;
+    console.log("barheight "+ photoy);
     // Draw the Y-axis
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
@@ -404,8 +453,8 @@ extractContestAndProblem();
 
 
 function displayPhoto() {
-    // const handle = 'Manthan_Variya'; // Replace with actual handle if needed
-    const xpath1='//*[@id="header"]/div[2]/div[2]/a[1]';
+    // const xpath1='//*[@id="header"]/div[2]/div[2]/a[1]';
+    const xpath1='//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[2]/a';
     const result1 = document.evaluate(xpath1, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     const targetElement1 = result1.singleNodeValue;
     // console.log(targetElement1.textContent);
@@ -435,9 +484,11 @@ function displayPhoto() {
                 ctx.save();
 
                 // Define the circle's center and radius
-                const circleX = 85;
-                const circleY = 20;
-                const radius = 20;
+                const circleX = photox;
+                // const circleY = 500-photoy-100;
+                const circleY = photoy;
+                console.log(photox+" "+photoy);
+                const radius = 15;
 
                 // Draw the circular clipping region
                 ctx.beginPath();
