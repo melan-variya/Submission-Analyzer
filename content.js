@@ -73,6 +73,26 @@ function extractContestAndProblem() {
 async function fetchSubmissionsData(contestID, problemIndex) {
     const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=50000`;
 
+    // Find the target element using XPath
+    const xpath = '//*[@id="pageContent"]/div[2]';
+    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const targetElement = result.singleNodeValue;
+
+    if (!targetElement) {
+        console.error('Element with XPath ' + xpath + ' not found.');
+        return;
+    }
+    
+    // Show loading context with GIF
+    const loadingElement = document.createElement('div');
+    loadingElement.id = 'loading';
+    loadingElement.style.fontSize = '16px';
+    loadingElement.style.fontWeight = 'bold';
+    loadingElement.style.color = '#007bff';
+    loadingElement.style.marginTop = '10px';
+    loadingElement.innerHTML = 'Loading submissions data...<br><img src="" alt="Loading...">';
+    targetElement.appendChild(loadingElement);
+
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -104,6 +124,9 @@ async function fetchSubmissionsData(contestID, problemIndex) {
         displayOkSubmissionDetails(okSubmissions, contestID, problemIndex);
     } catch (error) {
         console.error("Error fetching submission data:", error);
+    } finally {
+        // Remove loading context
+        targetElement.removeChild(loadingElement);
     }
 }
 
