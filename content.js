@@ -2,11 +2,17 @@
  * Extract the contest ID and problem index from a Codeforces problem URL.
  * @returns {void}
 */
+// submission id of the user
 const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
 const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
 const targetElement2 = result2.singleNodeValue;
 console.log(targetElement2.textContent);
 
+// timeconsumed of the user
+const time_user_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[6]';
+const result3 = document.evaluate(time_user_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+const targetElement3 = result3.singleNodeValue.textContent;
+let more_than=0 , less_than=0 ,total_subimssions;
 
 function extractContestAndProblem() {
 
@@ -65,7 +71,7 @@ function extractContestAndProblem() {
  * @returns {void}
  */
 async function fetchSubmissionsData(contestID, problemIndex) {
-    const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=100000`;
+    const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=50000`;
 
     try {
         const response = await fetch(apiUrl);
@@ -142,18 +148,30 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         newElement.style.marginTop = '10px';
 
         // Add header
-        newElement.innerHTML = `<strong>Contest ID:</strong> ${contestID} | <strong>Problem Index:</strong> ${problemIndex}<br><br>`;
+        // newElement.innerHTML = `<strong>Contest ID:</strong> ${contestID} | <strong>Problem Index:</strong> ${problemIndex}<br><br>`;
 
         // Filter submissions to only include those with an OK verdict
         const okSubmissions = submissions.filter(submission => submission.verdict === "OK");
 
+        //total submissions
+        total_subimssions = okSubmissions.length;
+
         // Display time and memory for each OK submission
-        let submissionDetails = "<strong>Successful Submissions (OK Verdict):</strong><br>";
         okSubmissions.forEach(submission => {
             
             // submissionDetails += `Submission ID: ${submission.id} | 
             //     Time Consumed: ${submission.timeConsumedMillis} ms | 
             //     Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
+
+                if(parseInt(submission.timeConsumedMillis) > parseInt(targetElement3)){
+                    more_than++;
+                }
+                else if(parseInt(submission.timeConsumedMillis) < parseInt(targetElement3)){
+                    less_than++;
+                }
+                else{
+                    total_subimssions--;
+                }
 
                 if (submission.id == targetElement2.textContent) {
                     // console.log("Matching submission found:");
@@ -174,7 +192,9 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 submission_id[Math.floor(submission.timeConsumedMillis / 10)] = submission.id;
             }
         });
-
+        console.log(more_than+" "+less_than +" "+total_subimssions);
+        console.log((more_than*100)/total_subimssions);
+        let submissionDetails = `<br><div style="border: 2px solid black; padding: 10px; display: inline-block;">You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %</div><br>`;
         // finding location of bar for printing photo
         let cou=0;
         for (let index = 0; index < bar_number; index++) {
@@ -220,13 +240,13 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         targetElement.appendChild(newElement);
 
         // Add count of successful submissions
-        const countElement = document.createElement('div');
-        countElement.style.fontSize = '16px';
-        countElement.style.fontWeight = 'bold';
-        countElement.style.color = '#007bff';
-        countElement.style.marginTop = '10px';
-        countElement.innerHTML = `<strong>Total Successful Submissions (OK verdict):</strong> ${okSubmissions.length}`;
-        targetElement.appendChild(countElement);
+        // const countElement = document.createElement('div');
+        // countElement.style.fontSize = '16px';
+        // countElement.style.fontWeight = 'bold';
+        // countElement.style.color = '#007bff';
+        // countElement.style.marginTop = '10px';
+        // countElement.innerHTML = `<strong>Total Successful Submissions (OK verdict):</strong> ${okSubmissions.length}`;
+        // targetElement.appendChild(countElement);
         draw_graph();
         
     } else {
@@ -427,7 +447,7 @@ function draw_graph() {
             if (hoveredBarIndex !== -1) {
                 const hoveredBar = bars[hoveredBarIndex];
                 ctx.clearRect(hoveredBar.x - 1, hoveredBar.y - 1, hoveredBar.width + 2, hoveredBar.height + 2); // Clear the bar area
-                ctx.fillStyle = 'rgba(255, 99, 132, 0.8)'; // Highlight color
+                ctx.fillStyle = 'rgb(59, 89, 152)'; // Highlight color
                 ctx.fillRect(hoveredBar.x, hoveredBar.y, hoveredBar.width, hoveredBar.height); // Redraw the hovered bar
     
                 // Redraw the X-axis portion below this bar
