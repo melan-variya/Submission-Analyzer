@@ -2,7 +2,13 @@
  * Extract the contest ID and problem index from a Codeforces problem URL.
  * @returns {void}
 */
+// import Chart from 'chart.js/auto';
+
+// import { Chart } from "chart.js";
+
 // submission id of the user
+
+let targetX, targetY=0;
 const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
 const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
 const targetElement2 = result2.singleNodeValue;
@@ -71,8 +77,11 @@ function extractContestAndProblem() {
  * @returns {void}
  */
 async function fetchSubmissionsData(contestID, problemIndex) {
-    const apiUrl = `https://codeforces.com/api/contest.status?contestId=${contestID}&asManager=false&from=1&count=50000`;
-
+    const apiUrl1 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=1&count=5000`;
+    const apiUrl2 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=5001&count=10000`;
+    const apiUrl3 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=10001&count=15000`;
+    const apiUrl4 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=15001&count=20000`;
+     
     // Find the target element using XPath
     const xpath = '//*[@id="pageContent"]/div[2]';
     const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
@@ -82,7 +91,7 @@ async function fetchSubmissionsData(contestID, problemIndex) {
         console.error('Element with XPath ' + xpath + ' not found.');
         return;
     }
-    
+
     // Show loading context with GIF
     const loadingElement = document.createElement('div');
     loadingElement.id = 'loading';
@@ -90,35 +99,33 @@ async function fetchSubmissionsData(contestID, problemIndex) {
     loadingElement.style.fontWeight = 'bold';
     loadingElement.style.color = '#007bff';
     loadingElement.style.marginTop = '10px';
-    loadingElement.innerHTML = 'Loading submissions data...<br><img src="" alt="Loading...">';
+    loadingElement.innerHTML = 'Submission-Analyzer<br><br><img src="https://raw.githubusercontent.com/melan-variya/Weather-App/refs/heads/main/loading.gif" alt="Loading..." style="width: 50px; height: 50px; display: block; margin: 0 auto;">';
     targetElement.appendChild(loadingElement);
 
     try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+        const [response1, response2] = await Promise.all([fetch(apiUrl1), fetch(apiUrl2), fetch(apiUrl3), fetch(apiUrl4)]);
+        const data1 = await response1.json();
+        const data2 = await response2.json();
 
-        // Check if the response is successful
-        if (data.status !== "OK") {
+        // Check if the responses are successful
+        if (data1.status !== "OK" || data2.status !== "OK") {
             console.error("Failed to fetch data from Codeforces API");
             return;
         }
 
-        // Filter submissions that match the given problemIndex
-        const matchingSubmissions = data.result.filter(
-            submission => submission.problem.index === problemIndex
+        // Combine results from both API calls
+        const combinedResults = [...data1.result, ...data2.result];
+
+        // Filter submissions that match the given problemIndex and have an OK verdict
+        const okSubmissions = combinedResults.filter(
+            submission => submission.problem.index === problemIndex && submission.verdict === "OK"
         );
 
         // If no matching submissions are found
-        if (matchingSubmissions.length === 0) {
+        if (okSubmissions.length === 0) {
             console.log("Problem not found");
-            console.log(matchingSubmissions);
             return;
         }
-
-        // Filter for OK verdicts among the matching submissions
-        const okSubmissions = matchingSubmissions.filter(
-            submission => submission.verdict === "OK"
-        );
 
         // Display details for OK submissions
         displayOkSubmissionDetails(okSubmissions, contestID, problemIndex);
@@ -130,6 +137,7 @@ async function fetchSubmissionsData(contestID, problemIndex) {
     }
 }
 
+
 /**
  * Display the time and memory consumed for each successful submission (OK verdict).
  * @param {Array} submissions - Array of submission data.
@@ -138,10 +146,12 @@ async function fetchSubmissionsData(contestID, problemIndex) {
  * @returns {void}
 */
 // Initialize the arrays with 10 elements, all set to 0
-let time_consumed = new Array(250).fill(0);  // For time consumed (mod 10)
-let time_consumed_without_0 = new Array();
-//store the maximum number of submissions with same time
-let submission_id = new Array(250).fill(0);  // For submission id (mod 10)
+let time_consumed = new Array(250).fill(0);  // store the number of people with same time limit
+let time_consumed_without_0 = new Array();// same as time_consumed just does not contain 0 entry
+//store time for x axis
+let time_limit= new Array();
+// For submission id 
+let submission_id = new Array(250).fill(0);  // used to show code of a bar onclick
 let submission_id_without_0 = new Array(250).fill(0);
 //store the height of each bar relative to the maximum number of submissions with same time
 let relative_to_max = new Array(250).fill(0);
@@ -202,11 +212,10 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                     console.log("Time Consumed (ms):", submission.timeConsumedMillis);
                     locate_time=submission.timeConsumedMillis;
                     bar_number = Math.floor(submission.timeConsumedMillis / 10);
+                    targetX=(Math.floor(submission.timeConsumedMillis / 10))*10;
+                    console.log("x"+targetX);
                     console.log(bar_number);
                 } 
-                // console.log("Matching submission found:");
-                // console.log("Submission ID:", submission.id);
-                // console.log("Time Consumed (ms):", submission.timeConsumedMillis);
                 
             // Increment counts in time_consumed and map2 based on mod 10
             time_consumed[Math.floor(submission.timeConsumedMillis / 10)] += 1; // Use Math.floor to ensure correct indexing
@@ -215,9 +224,17 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 submission_id[Math.floor(submission.timeConsumedMillis / 10)] = submission.id;
             }
         });
+
+        submission_id.forEach((value , index)=>{
+            if(value!=0){
+                time_limit.push(index*10);
+            }
+        });
+        
+
         console.log(more_than+" "+less_than +" "+total_subimssions);
-        console.log((more_than*100)/total_subimssions);
-        let submissionDetails = `<br><div style="border: 2px solid black; padding: 10px; display: inline-block;">You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %</div><br>`;
+        console.log("percent "+(more_than*100)/total_subimssions);
+        // let submissionDetails = `Submission-Analyzer <br><br><div style="border: 2px solid black; padding: 10px; display: inline-block;">You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %</div><br>`;
         // finding location of bar for printing photo
         let cou=0;
         for (let index = 0; index < bar_number; index++) {
@@ -237,12 +254,14 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             max_time=Math.max(max_time,value);
             // submissionDetails += `Time Consumed Mod ${index}: ${value} occurrences<br>`;
         });
-        submissionDetails += "<br>";
+        // submissionDetails += "<br>";
         submission_id.forEach(sub_id);
         function sub_id(value , index){
             relative_to_max[index] = (4*time_consumed[index])/max_time;
             // submissionDetails += `Submission ID Mod ${index}: ${value} : ${relative_to_max[index]}<br>`;
+            // submissionDetails += `${submission_id[index]}<br>`;
         }
+        
         // submissionDetails+= "<br>";
         // submissionDetails = "<strong>Submission ID Distribution:</strong><br>";
         // submissionDetails+= "<br>";
@@ -253,11 +272,11 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             // submissionDetails += `Memory Consumed Mod ${index}: ${value} occurrences<br>`;
         // });
 
-        if (okSubmissions.length === 0) {
-            submissionDetails = "<strong>No successful submissions (OK verdict) found.</strong><br>";
-        }
+        // if (okSubmissions.length === 0) {
+        //     submissionDetails = "<strong>No successful submissions (OK verdict) found.</strong><br>";
+        // }
 
-        newElement.innerHTML += submissionDetails;
+        // newElement.innerHTML += submissionDetails;
 
         // Append the new element to the target element
         targetElement.appendChild(newElement);
@@ -270,7 +289,8 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         // countElement.style.marginTop = '10px';
         // countElement.innerHTML = `<strong>Total Successful Submissions (OK verdict):</strong> ${okSubmissions.length}`;
         // targetElement.appendChild(countElement);
-        draw_graph();
+        // draw_graph();
+        drawGraph();
         
     } else {
         console.error("Target element not found.");
@@ -289,205 +309,427 @@ const ctx = canvas.getContext('2d');
 
 let photox,photoy;
 
-function draw_graph() {
-    // Filter non-zero values from submission_id and relative_to_max
-    const relative_to_max_without_0 = relative_to_max.filter(value => value !== 0);
-    time_consumed_without_0 = time_consumed.filter(value => value !== 0);
-    const index_of_non_zero = [];
-    submission_id.forEach((value, index) => {
-        if (value !== 0) {
-            index_of_non_zero.push(index * 10); // Store the corresponding index (scaled by 10)
-        }
-    });
 
-    if (index_of_non_zero.length === 0 || relative_to_max_without_0.length === 0) {
-        console.error("No valid data to draw the graph.");
-        return;
-    }
-    
+function drawGraph() {
+    // Filter non-zero values from time_consumed
+    const timeConsumedFiltered = time_consumed.filter(value => value !== 0);
 
-    const xpath = '//*[@id="pageContent"]/div[2]';
+    // Calculate scaled indices for non-zero values in submission_id
+    const nonZeroIndices = submission_id.reduce((indices, value, index) => {
+        if (value !== 0) indices.push(index * 10); // Scale index by 10
+        return indices;
+    }, []);
+
+    console.log("Non-zero indices count:", nonZeroIndices.length);
+    console.log("Time limit count:", time_limit.length);
+
+    // Locate the target element using XPath
+    const xpath = "//*[@id='pageContent']/div[2]";
     const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-
     const targetElement = result.singleNodeValue;
 
     if (!targetElement) {
-        console.error('Element with XPath ' + xpath + ' not found.');
+        console.error("Target element not found.");
         return;
     }
 
-    // Append the canvas to the found element
-    targetElement.appendChild(canvas);
+    // Get the target element's width
+    const targetWidth = targetElement.offsetWidth;
+    console.log(targetX);
 
-    // Graph parameters
-    const barWidth = 15; // Width of each bar
-    const barSpacing = 5; // Space between bars
-    const maxBarHeight = 350; // Maximum height of bars
-    const xOffset = 50; // Offset for the graph to start
-    const yOffset = 450; // Y-offset for the baseline of the graph
-    const maxValue = Math.max(...relative_to_max_without_0); // Find the maximum value for scaling
+    // Create a container for the graph
+    const container = document.createElement("div");
+    container.id = "graph-container";
+    container.style = `
+        width: ${targetWidth - 20}px;
+        height: 550px;
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        margin-top: 20px;
+    `;
 
-    // Draw bars
-    
+    // Add a canvas element for the graph
+    const canvas = document.createElement("canvas");
+    canvas.id = "timeGraph";
+    container.appendChild(canvas);
 
-    loop1:
-    for (let index = 0; index < relative_to_max_without_0.length; index++) {
-        const value = relative_to_max_without_0[index];
-        const barHeight = (value / maxValue) * maxBarHeight; // Scale the bar height
-        // Set minimum bar height to 5 pixels
-        const finalBarHeight = barHeight < 5 ? 5 : barHeight;
+    // Append the container to the target element
+    targetElement.appendChild(container);
 
-        const x = xOffset + index * (barWidth + barSpacing); // X-coordinate for the bar
-        const y = yOffset - finalBarHeight; // Y-coordinate (top of the bar)
-
-        bars.push({
-            x: x,
-            y: y,
-            width: barWidth,
-            height: finalBarHeight,
-            index: index // Storing index of the bar for reference
-        });
-
-        // Set bar color
-        ctx.fillStyle = 'rgba(54, 162, 235, 0.8)';
-        ctx.fillRect(x, y, barWidth, finalBarHeight); // Draw the bar
-
-        // Draw the submission ID or labels on the x-axis
-        ctx.fillStyle = '#000';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        
-        // if(index_of_non_zero[index]==(parseInt((locate_time)/10))*10){
-        //     photox= x + barWidth / 2;
-        //     //     // photoy=yOffset + 15;
-        // }
-        // console.log((parseInt((locate_time)/10))*10);
-        // // for (let index = 0; index < index_of_non_zero.length; index++) {
-        // //     console.log(index_of_non_zero[index]);
-            
-        // }
-        // Check if current index is divisible by 100
-        if (index_of_non_zero[index] % 100 === 0) {
-            ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
-            continue; // Skip to the next iteration
-        }
-        if(index == index_of_non_zero.length - 1){
-            ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
-        }
-        // Safeguard to avoid accessing undefined values at the end of the array
-        if (index < index_of_non_zero.length - 1) {
-            if (index_of_non_zero[index + 1] % 100 === 0) {
-                // ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
-                continue; // Skip to the next iteration
-            }
-            const current = Math.floor(index_of_non_zero[index] / 100);
-            const next = Math.floor(index_of_non_zero[index + 1] / 100);
-
-            // Only add a new label if there's a gap in 100s
-            if (current !== next) {
-                ctx.fillText((current + 1) * 100, x + barWidth / 2, yOffset + 15);
-            }
-        }
-    }
-    //finding location of photo
-
-    // console.log('barheight'+bars[bar_number-1].height);
-    // bars.forEach(height => {
-    //     console.log(height);
-    // });
-    // console.log("bar_height" + bar_number-1);
-    photox=bars[bar_number-1].x+barWidth/2;
-    // photoy=bars[bar_number-1].y+bars[bar_number-1].height-100;
-    photoy=450-bars[bar_number-1].height-80;
-    console.log("barheight "+ photoy);
-    // Draw the Y-axis
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(xOffset - 10, yOffset - maxBarHeight-50); // Top of the Y-axis
-    ctx.lineTo(xOffset - 10, yOffset); // Bottom of the Y-axis
-    ctx.stroke();
-
-    // Draw the X-axis
-    ctx.beginPath();
-    ctx.moveTo(xOffset - 10, yOffset); // Left of the X-axis
-    ctx.lineTo(xOffset + (relative_to_max_without_0.length * (barWidth + barSpacing)), yOffset); // Right of the X-axis
-    ctx.stroke();
-
-    // Add labels to the Y-axis
-    ctx.fillStyle = '#000';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'right';
-    for (let i = 0; i <= maxValue; i += Math.ceil(maxValue / 10)) {
-        const y = yOffset - (i / maxValue) * maxBarHeight;
-        ctx.fillText(i, xOffset - 15, y + 5);
+    // Ensure Chart.js is loaded
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js is not loaded properly.");
+        return;
     }
 
-    // Print multiples of 100 on the X-axis
-    ctx.fillStyle = '#000';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
+    const highlightColor = "rgba(255, 99, 132, 0.8)"; // Red color
+    const defaultColor = "rgba(75, 192, 192, 0.2)"; // Default blue color
 
-    let lastHoveredBarIndex = -1; // Keep track of the last hovered bar
-    
-    displayPhoto();
-    canvas.addEventListener('mousemove', (event) => {
-        const mouseX = event.offsetX; // X position of mouse relative to canvas
-        const mouseY = event.offsetY; // Y position of mouse relative to canvas
-    
-        let hoveredBarIndex = -1; // Initialize no hovered bar
-    
-        // Loop through the bars to check if the mouse is inside any bar
-        bars.forEach((bar, index) => {
-            if (
-                mouseX >= bar.x && // Check left boundary
-                mouseX <= bar.x + bar.width && // Check right boundary
-                mouseY >= bar.y && // Check top boundary
-                mouseY <= bar.y + bar.height // Check bottom boundary
-            ) {
-                hoveredBarIndex = index; // Store the index of the hovered bar
+    // Data for the graph
+    const chartData = {
+        labels: time_limit, // X-axis data
+        datasets: [
+            {
+                label: "You are",
+                data: timeConsumedFiltered,
+                backgroundColor: time_limit.map(label => 
+                    label === targetX ? highlightColor : defaultColor
+                ),
+                borderColor: time_limit.map(label => 
+                    label === targetX ? highlightColor : "rgba(75, 192, 192, 1)"
+                ),
+                borderWidth: 1,
+                stack: 'stack0'
+            },
+            {
+                label: "Others",
+                data: [], // Empty data as this is just for legend
+                backgroundColor: highlightColor, // Red color for Others
+                borderColor: highlightColor,
+                borderWidth: 1,
+                stack: 'stack0',
+                hidden: false
             }
-        });
+        ]
+    };
     
-        const ctx = canvas.getContext('2d');
-    
-        if (hoveredBarIndex !== lastHoveredBarIndex) {
-            // Clear the last hovered bar if it exists
-            if (lastHoveredBarIndex !== -1) {
-                const lastBar = bars[lastHoveredBarIndex];
-                ctx.clearRect(lastBar.x - 1, lastBar.y - 1, lastBar.width + 2, lastBar.height + 2); // Clear the last bar area
-                ctx.fillStyle = 'rgba(54, 162, 235, 0.8)'; // Original bar color
-                ctx.fillRect(lastBar.x, lastBar.y, lastBar.width, lastBar.height); // Redraw the last bar
-                
-                ctx.clearRect(lastBar.x -5.2, lastBar.y - 40, 25.7, 20); 
-
-                // Redraw the X-axis portion below this bar
-                ctx.fillStyle = '#000'; // X-axis color
-                ctx.fillRect(lastBar.x - 1, canvas.height - 51, lastBar.width + 2, 2); // Redraw the X-axis
+    // Chart configuration
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 50, // Add padding to avoid overlap with the text
             }
-    
-            // Highlight the newly hovered bar
-            if (hoveredBarIndex !== -1) {
-                const hoveredBar = bars[hoveredBarIndex];
-                ctx.clearRect(hoveredBar.x - 1, hoveredBar.y - 1, hoveredBar.width + 2, hoveredBar.height + 2); // Clear the bar area
-                ctx.fillStyle = 'rgb(59, 89, 152)'; // Highlight color
-                ctx.fillRect(hoveredBar.x, hoveredBar.y, hoveredBar.width, hoveredBar.height); // Redraw the hovered bar
-    
-                // Redraw the X-axis portion below this bar
-                ctx.fillStyle = '#000'; // X-axis color
-                ctx.fillRect(hoveredBar.x - 1, canvas.height - 51, hoveredBar.width + 2, 2); // Redraw the X-axis
-                // let text_print=((hoveredBar.height/100)*max_time)/4;
-                console.log(hoveredBar.height/100);    
-                ctx.fillText(time_consumed_without_0[hoveredBarIndex], hoveredBar.x+8,hoveredBar.y-30)
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: "Time Limit (ms)"
+                },
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 10,
+                    maxRotation: 0,
+                    minRotation: 0
+                },
+                grid: {
+                    display: true,
+                    drawBorder: false,
+                    color: '#e0e0e0',
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: "No. of Users"
+                },
+                ticks: {
+                    callback: (value) => `${value}`,
+                },
+                grid: {
+                    display: true,
+                    color: '#e0e0e0',
+                }
             }
-    
-            // Update the last hovered bar index
-            lastHoveredBarIndex = hoveredBarIndex;
+        },
+        plugins: {
+            title: {
+                display: true, // Re-enable the title
+                text: "No. of Users vs Time Limit", // Set the title text
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: {
+                    top: 10, // Adjust padding to avoid overlap with custom text and box
+                    bottom: 10
+                }
+            },
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    generateLabels: function(chart) {
+                        const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                        
+                        // Modify the first label ("You are") to use the highlight color (red)
+                        if (defaultLabels[0]) {
+                            defaultLabels[0].fillStyle = highlightColor; // Use the highlight color for "You are"
+                            defaultLabels[0].strokeStyle = highlightColor;
+                        }
+                    
+                        // Leave the second label ("Others") with the default color
+                        if (defaultLabels[1]) {
+                            defaultLabels[1].fillStyle = defaultColor; // Use the default color for "Others"
+                            defaultLabels[1].strokeStyle = defaultColor;
+                        }
+                    
+                        return defaultLabels; // Return the modified labels
+                    }
+                },
+                onClick: null // Disable the click event on legend items
+            },
+            tooltip: {
+                callbacks: {
+                    label: (context) => `Time: ${context.raw} ms`
+                }
+            }
         }
-        
+    };
+
+    // Initialize Chart.js
+    const ctx = canvas.getContext("2d");
+    const chart = new Chart(ctx, {
+        type: "bar",
+        data: chartData,
+        options: chartOptions,
+        plugins: [{
+            id: 'customTextPlugin', // Unique ID for the plugin
+            afterDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save(); // Save the current context state
+
+                // Draw "Submission-Analyzer" text
+                ctx.font = "bold 18px Arial";
+                ctx.fillStyle = "#333";
+                ctx.textAlign = "center";
+                ctx.fillText("Submission-Analyzer", 100, 25);
+
+                // Draw the box for "You beat X.XX %"
+                const boxText = `You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %`;
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#555";
+                ctx.textAlign = "center";
+
+                // Measure the text width
+                const textWidth = ctx.measureText(boxText).width;
+
+                // Box dimensions
+                const boxPadding = 10;
+                const boxWidth = textWidth + boxPadding * 2;
+                const boxHeight = 30;
+                const boxX = (chart.width - boxWidth) / 2; // Center the box horizontally
+                const boxY = 40; // Position below the "Submission-Analyzer" text
+
+                // Draw the box border
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 50, boxWidth, boxHeight);
+
+                // Draw the text inside the box
+                ctx.fillText(boxText, 10+boxWidth/2, boxY + boxHeight / 2 + 10);
+
+                ctx.restore(); // Restore the context state
+            }
+        }]
     });
-    
 }
+
+
+
+
+// Immediately draw the graph when the script is executed
+// drawGraph();
+
+
+// function draw_graph() {
+    
+
+//     if (index_of_non_zero.length === 0 || relative_to_max_without_0.length === 0) {
+//         console.error("No valid data to draw the graph.");
+//         return;
+//     }
+    
+
+//     const xpath = '//*[@id="pageContent"]/div[2]';
+//     const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+
+//     const targetElement = result.singleNodeValue;
+
+//     if (!targetElement) {
+//         console.error('Element with XPath ' + xpath + ' not found.');
+//         return;
+//     }
+
+//     // Append the canvas to the found element
+//     targetElement.appendChild(canvas);
+
+//     // Graph parameters
+//     const barWidth = 15; // Width of each bar
+//     const barSpacing = 5; // Space between bars
+//     const maxBarHeight = 350; // Maximum height of bars
+//     const xOffset = 50; // Offset for the graph to start
+//     const yOffset = 450; // Y-offset for the baseline of the graph
+//     const maxValue = Math.max(...relative_to_max_without_0); // Find the maximum value for scaling
+
+//     // Draw bars
+    
+
+//     loop1:
+//     for (let index = 0; index < relative_to_max_without_0.length; index++) {
+//         const value = relative_to_max_without_0[index];
+//         const barHeight = (value / maxValue) * maxBarHeight; // Scale the bar height
+//         // Set minimum bar height to 5 pixels
+//         const finalBarHeight = barHeight < 5 ? 5 : barHeight;
+
+//         const x = xOffset + index * (barWidth + barSpacing); // X-coordinate for the bar
+//         const y = yOffset - finalBarHeight; // Y-coordinate (top of the bar)
+
+//         bars.push({
+//             x: x,
+//             y: y,
+//             width: barWidth,
+//             height: finalBarHeight,
+//             index: index // Storing index of the bar for reference
+//         });
+
+//         // Set bar color
+//         ctx.fillStyle = 'rgba(54, 162, 235, 0.8)';
+//         ctx.fillRect(x, y, barWidth, finalBarHeight); // Draw the bar
+
+//         // Draw the submission ID or labels on the x-axis
+//         ctx.fillStyle = '#000';
+//         ctx.font = '10px Arial';
+//         ctx.textAlign = 'center';
+        
+//         // if(index_of_non_zero[index]==(parseInt((locate_time)/10))*10){
+//         //     photox= x + barWidth / 2;
+//         //     //     // photoy=yOffset + 15;
+//         // }
+//         // console.log((parseInt((locate_time)/10))*10);
+//         // // for (let index = 0; index < index_of_non_zero.length; index++) {
+//         // //     console.log(index_of_non_zero[index]);
+            
+//         // }
+//         // Check if current index is divisible by 100
+//         if (index_of_non_zero[index] % 100 === 0) {
+//             ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
+//             continue; // Skip to the next iteration
+//         }
+//         if(index == index_of_non_zero.length - 1){
+//             ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
+//         }
+//         // Safeguard to avoid accessing undefined values at the end of the array
+//         if (index < index_of_non_zero.length - 1) {
+//             if (index_of_non_zero[index + 1] % 100 === 0) {
+//                 // ctx.fillText(index_of_non_zero[index], x + barWidth / 2, yOffset + 15); // X is centered on the bar
+//                 continue; // Skip to the next iteration
+//             }
+//             const current = Math.floor(index_of_non_zero[index] / 100);
+//             const next = Math.floor(index_of_non_zero[index + 1] / 100);
+
+//             // Only add a new label if there's a gap in 100s
+//             if (current !== next) {
+//                 ctx.fillText((current + 1) * 100, x + barWidth / 2, yOffset + 15);
+//             }
+//         }
+//     }
+//     //finding location of photo
+
+//     // console.log('barheight'+bars[bar_number-1].height);
+//     // bars.forEach(height => {
+//     //     console.log(height);
+//     // });
+//     // console.log("bar_height" + bar_number-1);
+//     photox=bars[bar_number-1].x+barWidth/2;
+//     // photoy=bars[bar_number-1].y+bars[bar_number-1].height-100;
+//     photoy=450-bars[bar_number-1].height-80;
+//     console.log("barheight "+ photoy);
+//     // Draw the Y-axis
+//     ctx.strokeStyle = '#000';
+//     ctx.lineWidth = 2;
+//     ctx.beginPath();
+//     ctx.moveTo(xOffset - 10, yOffset - maxBarHeight-50); // Top of the Y-axis
+//     ctx.lineTo(xOffset - 10, yOffset); // Bottom of the Y-axis
+//     ctx.stroke();
+
+//     // Draw the X-axis
+//     ctx.beginPath();
+//     ctx.moveTo(xOffset - 10, yOffset); // Left of the X-axis
+//     ctx.lineTo(xOffset + (relative_to_max_without_0.length * (barWidth + barSpacing)), yOffset); // Right of the X-axis
+//     ctx.stroke();
+
+//     // Add labels to the Y-axis
+//     ctx.fillStyle = '#000';
+//     ctx.font = '12px Arial';
+//     ctx.textAlign = 'right';
+//     for (let i = 0; i <= maxValue; i += Math.ceil(maxValue / 10)) {
+//         const y = yOffset - (i / maxValue) * maxBarHeight;
+//         ctx.fillText(i, xOffset - 15, y + 5);
+//     }
+
+//     // Print multiples of 100 on the X-axis
+//     ctx.fillStyle = '#000';
+//     ctx.font = '12px Arial';
+//     ctx.textAlign = 'center';
+
+//     let lastHoveredBarIndex = -1; // Keep track of the last hovered bar
+    
+//     displayPhoto();
+//     canvas.addEventListener('mousemove', (event) => {
+//         const mouseX = event.offsetX; // X position of mouse relative to canvas
+//         const mouseY = event.offsetY; // Y position of mouse relative to canvas
+    
+//         let hoveredBarIndex = -1; // Initialize no hovered bar
+    
+//         // Loop through the bars to check if the mouse is inside any bar
+//         bars.forEach((bar, index) => {
+//             if (
+//                 mouseX >= bar.x && // Check left boundary
+//                 mouseX <= bar.x + bar.width && // Check right boundary
+//                 mouseY >= bar.y && // Check top boundary
+//                 mouseY <= bar.y + bar.height // Check bottom boundary
+//             ) {
+//                 hoveredBarIndex = index; // Store the index of the hovered bar
+//             }
+//         });
+    
+//         const ctx = canvas.getContext('2d');
+    
+//         if (hoveredBarIndex !== lastHoveredBarIndex) {
+//             // Clear the last hovered bar if it exists
+//             if (lastHoveredBarIndex !== -1) {
+//                 const lastBar = bars[lastHoveredBarIndex];
+//                 ctx.clearRect(lastBar.x - 1, lastBar.y - 1, lastBar.width + 2, lastBar.height + 2); // Clear the last bar area
+//                 ctx.fillStyle = 'rgba(54, 162, 235, 0.8)'; // Original bar color
+//                 ctx.fillRect(lastBar.x, lastBar.y, lastBar.width, lastBar.height); // Redraw the last bar
+                
+//                 ctx.clearRect(lastBar.x -5.2, lastBar.y - 40, 25.7, 20); 
+
+//                 // Redraw the X-axis portion below this bar
+//                 ctx.fillStyle = '#000'; // X-axis color
+//                 ctx.fillRect(lastBar.x - 1, canvas.height - 51, lastBar.width + 2, 2); // Redraw the X-axis
+//             }
+    
+//             // Highlight the newly hovered bar
+//             if (hoveredBarIndex !== -1) {
+//                 const hoveredBar = bars[hoveredBarIndex];
+//                 ctx.clearRect(hoveredBar.x - 1, hoveredBar.y - 1, hoveredBar.width + 2, hoveredBar.height + 2); // Clear the bar area
+//                 ctx.fillStyle = 'rgb(59, 89, 152)'; // Highlight color
+//                 ctx.fillRect(hoveredBar.x, hoveredBar.y, hoveredBar.width, hoveredBar.height); // Redraw the hovered bar
+    
+//                 // Redraw the X-axis portion below this bar
+//                 ctx.fillStyle = '#000'; // X-axis color
+//                 ctx.fillRect(hoveredBar.x - 1, canvas.height - 51, hoveredBar.width + 2, 2); // Redraw the X-axis
+//                 // let text_print=((hoveredBar.height/100)*max_time)/4;
+//                 console.log(hoveredBar.height/100);    
+//                 ctx.fillText(time_consumed_without_0[hoveredBarIndex], hoveredBar.x+8,hoveredBar.y-30)
+//             }
+    
+//             // Update the last hovered bar index
+//             lastHoveredBarIndex = hoveredBarIndex;
+//         }
+        
+//     });
+    
+// }
 
 
 // Call the function to start the process

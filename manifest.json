@@ -9,11 +9,16 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://codeforces.com/problemset/problem/*", "https://codeforces.com/contest/*","https://codeforces.com/contest/2049/submission/*"],
-            "js": ["content.js"]
+            "matches": [
+                "https://codeforces.com/problemset/problem/*",
+                "https://codeforces.com/contest/*",
+                "https://codeforces.com/contest/2049/submission/*"
+            ],
+            "js": ["chart.umd.js","content.js"]
         }
     ],
     "action": {
-        "default_title": "Extract Contest Info"
+        "default_title": "Extract Contest Info",
+        "default_popup": "popup.html"
     }
 }
