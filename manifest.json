@@ -10,9 +10,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://codeforces.com/problemset/problem/*",
-                "https://codeforces.com/contest/*",
-                "https://codeforces.com/contest/2049/submission/*"
+                "https://codeforces.com/contest/*"
             ],
             "js": ["chart.umd.js","content.js"]
         }

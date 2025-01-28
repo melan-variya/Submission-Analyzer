@@ -9,16 +9,21 @@
 // submission id of the user
 
 let targetX, targetY=0;
+let user_point_memo;
 const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
 const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
 const targetElement2 = result2.singleNodeValue;
 console.log(targetElement2.textContent);
 
+const user_point_memo_xpath = '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[7]';
+const user_point_memo_result = document.evaluate(user_point_memo_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+const user_point_memo_text = user_point_memo_result.singleNodeValue;
 // timeconsumed of the user
 const time_user_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[6]';
 const result3 = document.evaluate(time_user_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
 const targetElement3 = result3.singleNodeValue.textContent;
 let more_than=0 , less_than=0 ,total_subimssions;
+let more_than_user_memo=0, total_subimssions_memory=0; 
 
 function extractContestAndProblem() {
 
@@ -159,6 +164,9 @@ let relative_to_max_without_0 = new Array(250).fill(0);
 // contain all non zero value's index of submission_id
 let index_of_non_zero = new Array();
 
+// store Memory
+let store_memory= new Map();
+
 let max_time = 0;
 
 let locate_time;
@@ -188,14 +196,21 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
 
         //total submissions
         total_subimssions = okSubmissions.length;
-
+        total_subimssions_memory= okSubmissions.length; 
         // Display time and memory for each OK submission
+        console.log(more_than_user_memo+ " "+total_subimssions_memory)
         okSubmissions.forEach(submission => {
             
             // submissionDetails += `Submission ID: ${submission.id} | 
             //     Time Consumed: ${submission.timeConsumedMillis} ms | 
             //     Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
-
+            if(parseInt(submission.memoryConsumedBytes/1000) > parseInt(user_point_memo_text.textContent)){
+                    console.log(submission.memoryConsumedBytes/1000+" "+user_point_memo_text.textContent);
+                    more_than_user_memo++;
+                }
+                else if(parseInt(submission.memoryConsumedBytes/1000) == parseInt(user_point_memo_text.textContent)){
+                    total_subimssions_memory--;
+                }
                 if(parseInt(submission.timeConsumedMillis) > parseInt(targetElement3)){
                     more_than++;
                 }
@@ -205,18 +220,32 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 else{
                     total_subimssions--;
                 }
-
+                // console.log(submission.memoryConsumedBytes);
+                let memory = submission.memoryConsumedBytes/1000;
+                // If the memory value already exists in the map, increment its count
+                if (store_memory.has(memory)) {
+                    store_memory.set(memory, store_memory.get(memory) + 1);
+                }
+                // Otherwise, add it to the map with a count of 1
+                else {
+                    store_memory.set(memory, 1);
+                }
+                // if(memory==user_point_memo_text.textContent){
+                // }
+                // console.log(memory);
                 if (submission.id == targetElement2.textContent) {
                     // console.log("Matching submission found:");
                     // console.log("Submission ID:", submission.id);
                     console.log("Time Consumed (ms):", submission.timeConsumedMillis);
+                    console.log("Memory consumed (Bytes):", submission.memoryConsumedBytes);
+                    user_point_memo =submission.memoryConsumedBytes/1000;
                     locate_time=submission.timeConsumedMillis;
                     bar_number = Math.floor(submission.timeConsumedMillis / 10);
                     targetX=(Math.floor(submission.timeConsumedMillis / 10))*10;
                     console.log("x"+targetX);
                     console.log(bar_number);
                 } 
-                
+            // store_memory[submission.memoryConsumedBytes]+=1;
             // Increment counts in time_consumed and map2 based on mod 10
             time_consumed[Math.floor(submission.timeConsumedMillis / 10)] += 1; // Use Math.floor to ensure correct indexing
             // map2[Math.floor(submission.memoryConsumedBytes / 10)] += 1; // Same here
@@ -224,7 +253,7 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 submission_id[Math.floor(submission.timeConsumedMillis / 10)] = submission.id;
             }
         });
-
+        console.log(store_memory);
         submission_id.forEach((value , index)=>{
             if(value!=0){
                 time_limit.push(index*10);
@@ -234,6 +263,7 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
 
         console.log(more_than+" "+less_than +" "+total_subimssions);
         console.log("percent "+(more_than*100)/total_subimssions);
+        console.log("Memo"+total_subimssions_memory+ " "+more_than_user_memo);
         // let submissionDetails = `Submission-Analyzer <br><br><div style="border: 2px solid black; padding: 10px; display: inline-block;">You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %</div><br>`;
         // finding location of bar for printing photo
         let cou=0;
@@ -290,12 +320,20 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         // countElement.innerHTML = `<strong>Total Successful Submissions (OK verdict):</strong> ${okSubmissions.length}`;
         // targetElement.appendChild(countElement);
         // draw_graph();
-        drawGraph();
+        draw_time_graph();
+        draw_memory_Graph();
         
     } else {
         console.error("Target element not found.");
     }
+    store_memory.forEach((key,value)=>{
+        if(!key){
+            console.log(key+" "+value);
+        }
+    })
 }
+
+
 
 // Store data of all bars for hover effect
 const bars = [];
@@ -310,7 +348,7 @@ const ctx = canvas.getContext('2d');
 let photox,photoy;
 
 
-function drawGraph() {
+function draw_time_graph() {
     // Filter non-zero values from time_consumed
     const timeConsumedFiltered = time_consumed.filter(value => value !== 0);
 
@@ -372,7 +410,7 @@ function drawGraph() {
         labels: time_limit, // X-axis data
         datasets: [
             {
-                label: "You are",
+                label: "You",
                 data: timeConsumedFiltered,
                 backgroundColor: time_limit.map(label => 
                     label === targetX ? highlightColor : defaultColor
@@ -459,9 +497,9 @@ function drawGraph() {
                     generateLabels: function(chart) {
                         const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
                         
-                        // Modify the first label ("You are") to use the highlight color (red)
+                        // Modify the first label ("You") to use the highlight color (red)
                         if (defaultLabels[0]) {
-                            defaultLabels[0].fillStyle = highlightColor; // Use the highlight color for "You are"
+                            defaultLabels[0].fillStyle = highlightColor; // Use the highlight color for "You"
                             defaultLabels[0].strokeStyle = highlightColor;
                         }
                     
@@ -476,9 +514,23 @@ function drawGraph() {
                 },
                 onClick: null // Disable the click event on legend items
             },
+            // tooltip: {
+            //     callbacks: {
+            //         label: (context) => `Time: ${context.raw} ms`
+            //     }
+            // },
             tooltip: {
                 callbacks: {
-                    label: (context) => `Time: ${context.raw} ms`
+                    // Customize the title
+                    title: function(tooltipItems) {
+                        return `${tooltipItems[0].raw}`;
+                    },
+                    // Customize the label
+                    label: function(tooltipItem) {
+                        const value = tooltipItem.raw; // Y-axis value
+                        const label = tooltipItem.label; // X-axis label
+                        return [`Time(ms) : ${label}`]; // Multi-line tooltip
+                    },
                 }
             }
         }
@@ -534,9 +586,238 @@ function drawGraph() {
 
 
 
+function draw_memory_Graph() {
+
+    // Locate the target element using XPath
+    const xpath = "//*[@id='pageContent']/div[2]";
+    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    const targetElement = result.singleNodeValue;
+
+    if (!targetElement) {
+        console.error("Target element not found.");
+        return;
+    }
+
+    // Get the target element's width
+    const targetWidth = targetElement.offsetWidth;
+
+    // Create a container for the graph
+    const container = document.createElement("div");
+    container.id = "graph-container";
+    container.style = `
+        width: ${targetWidth - 20}px;
+        height: 550px;
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        margin-top: 20px;
+    `;
+
+    // Add a canvas element for the graph
+    const canvas = document.createElement("canvas");
+    canvas.id = "MemoryGraph";
+    container.appendChild(canvas);
+
+    // Append the container to the target element
+    targetElement.appendChild(container);
+
+    // Ensure Chart.js is loaded
+    if (typeof Chart === "undefined") {
+        console.error("Chart.js is not loaded properly.");
+        return;
+    }
+
+    const highlightColor = "rgba(255, 99, 132, 0.8)"; // Red color
+    const defaultColor = "rgba(75, 192, 192, 0.2)"; // Default blue color
+
+    // Sort data by labels
+    const sortedData = Array.from(store_memory.entries())
+        .map(([key, value]) => ({ label: parseFloat(key), value })) // Ensure numerical sorting
+        .sort((a, b) => a.label - b.label);
+
+    const sortedLabels = sortedData.map(item => item.label.toString());
+    const sortedValues = sortedData.map(item => item.value);
+    console.log("ne"+user_point_memo);
+    // Chart data
+    const chartData = {
+        labels: sortedLabels, // X-axis data
+        datasets: [
+            {
+                label: "You",
+                data: sortedValues, // Y-axis data
+                backgroundColor: Array.from(sortedLabels).map(label =>  
+                    label.toString() === user_point_memo.toString() ? highlightColor : defaultColor
+                ),
+                borderColor: Array.from(sortedLabels).map(label => 
+                    label.toString() === user_point_memo.toString() ? highlightColor : "rgba(75, 192, 192, 1)"
+                ),
+                borderWidth: 1,
+                stack: 'stack0'
+            },
+            {
+                label: "Others",
+                data: [], // Empty data as this is just for legend
+                backgroundColor: highlightColor,
+                borderColor: highlightColor,
+                borderWidth: 1,
+                stack: 'stack0',
+                hidden: false
+            }
+        ]
+    };
+
+    // Chart configuration
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 50
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: "Memory Consumed (KB)"
+                },
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 10,
+                    maxRotation: 0,
+                    minRotation: 0
+                },
+                grid: {
+                    display: true,
+                    drawBorder: false,
+                    color: '#e0e0e0',
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: "No. of Users"
+                },
+                ticks: {
+                    callback: value => `${value}`
+                },
+                grid: {
+                    display: true,
+                    color: '#e0e0e0',
+                }
+            }
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: "No. of Users Vs Memory Consumed", // Set the title text
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: {
+                    top: 10,
+                    bottom: 10
+                }
+            },
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    generateLabels: function(chart) {
+                        const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                        
+                        // Modify the first label ("You") to use the highlight color (red)
+                        if (defaultLabels[0]) {
+                            defaultLabels[0].fillStyle = highlightColor; // Use the highlight color for "You"
+                            defaultLabels[0].strokeStyle = highlightColor;
+                        }
+                    
+                        // Leave the second label ("Others") with the default color
+                        if (defaultLabels[1]) {
+                            defaultLabels[1].fillStyle = defaultColor; // Use the default color for "Others"
+                            defaultLabels[1].strokeStyle = defaultColor;
+                        }
+                    
+                        return defaultLabels; // Return the modified labels
+                    }
+                },
+                onClick: null // Disable the click event on legend items
+            },
+            tooltip: {
+                callbacks: {
+                    // Customize the title
+                    title: function(tooltipItems) {
+                        return `${tooltipItems[0].raw}`;
+                    },
+                    // Customize the label
+                    label: function(tooltipItem) {
+                        const value = tooltipItem.raw; // Y-axis value
+                        const label = tooltipItem.label; // X-axis label
+                        return [`Memory(KB) : ${label}`]; // Multi-line tooltip
+                    },
+                }
+            }
+        }
+    };
+
+    // Initialize Chart.js
+    const ctx = canvas.getContext("2d");
+    const chart = new Chart(ctx, {
+        type: "bar",
+        data: chartData,
+        options: chartOptions,
+        plugins: [{
+            id: 'customTextPlugin', // Unique ID for the plugin
+            afterDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save(); // Save the current context state
+
+                // // Draw "Submission-Analyzer" text
+                // ctx.font = "bold 18px Arial";
+                // ctx.fillStyle = "#333";
+                // ctx.textAlign = "center";
+                // ctx.fillText("Submission-Analyzer", 100, 25);
+
+                // Draw the box for "You beat X.XX %"
+                // console.log(total_subimssions_memory+ " "+more_than_user_memo);
+                const boxText = `You beat ${(((more_than_user_memo * 100) / total_subimssions_memory).toFixed(2))} %`;
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#555";
+                ctx.textAlign = "center";
+
+                // Measure the text width
+                const textWidth = ctx.measureText(boxText).width;
+
+                // Box dimensions
+                const boxPadding = 10;
+                const boxWidth = textWidth + boxPadding * 2;
+                const boxHeight = 30;
+                const boxX = (chart.width - boxWidth) / 2; // Center the box horizontally
+                const boxY = 40; // Position below the "Submission-Analyzer" text
+
+                // Draw the box border
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 50, boxWidth, boxHeight);
+
+                // Draw the text inside the box
+                ctx.fillText(boxText, 10+boxWidth/2, boxY + boxHeight / 2 + 10);
+
+                ctx.restore(); // Restore the context state
+            }
+        }]
+    });
+}
+
+
 
 // Immediately draw the graph when the script is executed
-// drawGraph();
+// draw_time_graph();
 
 
 // function draw_graph() {
