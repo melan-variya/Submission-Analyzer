@@ -10,7 +10,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://codeforces.com/contest/*"
+                "https://codeforces.com/contest/*/submission/*"
             ],
             "js": ["chart.umd.js","content.js"]
         }

@@ -7,25 +7,33 @@
 // import { Chart } from "chart.js";
 
 // submission id of the user
-
 let targetX, targetY=0;
 let user_point_memo;
-const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
-const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-const targetElement2 = result2.singleNodeValue;
-console.log(targetElement2.textContent);
-
 const user_point_memo_xpath = '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[7]';
 const user_point_memo_result = document.evaluate(user_point_memo_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-const user_point_memo_text = user_point_memo_result.singleNodeValue;
+let user_point_memo_text = user_point_memo_result.singleNodeValue;
 // timeconsumed of the user
 const time_user_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[6]';
 const result3 = document.evaluate(time_user_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-const targetElement3 = result3.singleNodeValue.textContent;
+const targetElement3 = result3.singleNodeValue;
 let more_than=0 , less_than=0 ,total_subimssions;
-let more_than_user_memo=0, total_subimssions_memory=0; 
+let more_than_user_memo=-1, total_subimssions_memory=-1; 
+const sub_id_xpath= '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[1]';
+const result2 = document.evaluate(sub_id_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+const targetElement2 = result2.singleNodeValue;
+console.log("target2"+targetElement2.textContent);
 
-function extractContestAndProblem() {
+// Call the function to start the process
+if (window.location.href.match(/^https:\/\/codeforces\.com\/contest\/\d+\/submission\/\d+$/)) {
+    console.log("Submission page detected.");
+    extractContestAndProblem();
+}
+else{
+    console.log("Not a submission page");
+}
+
+
+    function extractContestAndProblem() {
 
     
     const xpath = '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[3]/a';
@@ -72,8 +80,7 @@ function extractContestAndProblem() {
 
     // Call API to fetch submissions data and process it
     fetchSubmissionsData(contestID, problemIndex);
-}
-
+    }
 
 /**
  * Fetch the submissions data from the Codeforces API for a specific contest and problem.
@@ -81,65 +88,125 @@ function extractContestAndProblem() {
  * @param {string} problemIndex - The problem index (e.g., 'A', 'B', etc.).
  * @returns {void}
  */
+
+
 async function fetchSubmissionsData(contestID, problemIndex) {
-    const apiUrl1 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=1&count=5000`;
-    const apiUrl2 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=5001&count=10000`;
-    const apiUrl3 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=10001&count=15000`;
-    const apiUrl4 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=15001&count=20000`;
-     
-    // Find the target element using XPath
-    const xpath = '//*[@id="pageContent"]/div[2]';
-    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-    const targetElement = result.singleNodeValue;
+        const apiUrl1 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=1&count=50000`;
+        const apiUrl2 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=50001&count=100000`;
+        const apiUrl3 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=100001&count=150000`;
+        const apiUrl4 = `https://codeforces.com/api/contest.status?contestId=${contestID}&from=150001&count=200000`;
+        
+        // Find the target element using XPath
+        const xpath = '//*[@id="pageContent"]/div[2]';
+        const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        const targetElement = result.singleNodeValue;
 
-    if (!targetElement) {
-        console.error('Element with XPath ' + xpath + ' not found.');
-        return;
-    }
-
-    // Show loading context with GIF
-    const loadingElement = document.createElement('div');
-    loadingElement.id = 'loading';
-    loadingElement.style.fontSize = '16px';
-    loadingElement.style.fontWeight = 'bold';
-    loadingElement.style.color = '#007bff';
-    loadingElement.style.marginTop = '10px';
-    loadingElement.innerHTML = 'Submission-Analyzer<br><br><img src="https://raw.githubusercontent.com/melan-variya/Weather-App/refs/heads/main/loading.gif" alt="Loading..." style="width: 50px; height: 50px; display: block; margin: 0 auto;">';
-    targetElement.appendChild(loadingElement);
-
-    try {
-        const [response1, response2] = await Promise.all([fetch(apiUrl1), fetch(apiUrl2), fetch(apiUrl3), fetch(apiUrl4)]);
-        const data1 = await response1.json();
-        const data2 = await response2.json();
-
-        // Check if the responses are successful
-        if (data1.status !== "OK" || data2.status !== "OK") {
-            console.error("Failed to fetch data from Codeforces API");
+        if (!targetElement) {
+            console.error('Element with XPath ' + xpath + ' not found.');
             return;
         }
 
-        // Combine results from both API calls
-        const combinedResults = [...data1.result, ...data2.result];
+        // Create a modern loading animation
+        const loadingElement = document.createElement('div');
+        loadingElement.id = 'loading-container';
+        loadingElement.innerHTML = `
+            <div class="loading-animation">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            <p class="loading-text">Analyzing your submissions...</p>
+        `;
 
-        // Filter submissions that match the given problemIndex and have an OK verdict
-        const okSubmissions = combinedResults.filter(
-            submission => submission.problem.index === problemIndex && submission.verdict === "OK"
-        );
+        // Append CSS styles dynamically
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #loading-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100px;
+                background: #f4f4f4;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            }
 
-        // If no matching submissions are found
-        if (okSubmissions.length === 0) {
-            console.log("Problem not found");
-            return;
+            .loading-animation {
+                display: flex;
+                gap: 5px;
+            }
+
+            .dot {
+                width: 12px;
+                height: 12px;
+                background-color: #007bff;
+                border-radius: 50%;
+                animation: bounce 1.5s infinite ease-in-out;
+            }
+
+            .dot:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+
+            .dot:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+
+            @keyframes bounce {
+                0%, 80%, 100% {
+                    transform: scale(0);
+                }
+                40% {
+                    transform: scale(1);
+                }
+            }
+
+            .loading-text {
+                margin-top: 10px;
+                font-size: 16px;
+                color: #333;
+                font-weight: bold;
+            }
+        `;
+        document.head.appendChild(style);
+    
+        targetElement.appendChild(loadingElement);
+
+        try {
+            const [response1, response2] = await Promise.all([fetch(apiUrl1), fetch(apiUrl2), fetch(apiUrl3), fetch(apiUrl4)]);
+            const data1 = await response1.json();
+            const data2 = await response2.json();
+
+            // Check if the responses are successful
+            if (data1.status !== "OK" || data2.status !== "OK") {
+                console.error("Failed to fetch data from Codeforces API");
+                return;
+            }
+
+            // Combine results from both API calls
+            const combinedResults = [...data1.result, ...data2.result];
+
+            // Filter submissions that match the given problemIndex and have an OK verdict
+            const okSubmissions = combinedResults.filter(
+                submission => submission.problem.index === problemIndex && submission.verdict === "OK"
+            );
+
+            // If no matching submissions are found
+            if (okSubmissions.length === 0) {
+                console.log("Problem not found");
+                return;
+            }
+
+            // Display details for OK submissions
+            displayOkSubmissionDetails(okSubmissions, contestID, problemIndex);
+        } catch (error) {
+            console.error("Error fetching submission data:", error);
+        } finally {
+            // Remove loading context
+            targetElement.removeChild(loadingElement);
         }
-
-        // Display details for OK submissions
-        displayOkSubmissionDetails(okSubmissions, contestID, problemIndex);
-    } catch (error) {
-        console.error("Error fetching submission data:", error);
-    } finally {
-        // Remove loading context
-        targetElement.removeChild(loadingElement);
-    }
 }
 
 
@@ -151,16 +218,16 @@ async function fetchSubmissionsData(contestID, problemIndex) {
  * @returns {void}
 */
 // Initialize the arrays with 10 elements, all set to 0
-let time_consumed = new Array(250).fill(0);  // store the number of people with same time limit
+let time_consumed = new Array(500).fill(0);  // store the number of people with same time limit
 let time_consumed_without_0 = new Array();// same as time_consumed just does not contain 0 entry
 //store time for x axis
 let time_limit= new Array();
 // For submission id 
-let submission_id = new Array(250).fill(0);  // used to show code of a bar onclick
-let submission_id_without_0 = new Array(250).fill(0);
+let submission_id = new Array(500).fill(0);  // used to show code of a bar onclick
+let submission_id_without_0 = new Array(500).fill(0);
 //store the height of each bar relative to the maximum number of submissions with same time
-let relative_to_max = new Array(250).fill(0);
-let relative_to_max_without_0 = new Array(250).fill(0);
+let relative_to_max = new Array(500).fill(0);
+let relative_to_max_without_0 = new Array(500).fill(0);
 // contain all non zero value's index of submission_id
 let index_of_non_zero = new Array();
 
@@ -186,7 +253,6 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         newElement.style.fontSize = '16px';
         newElement.style.fontWeight = 'bold';
         newElement.style.color = '#007bff';
-        newElement.style.marginTop = '10px';
 
         // Add header
         // newElement.innerHTML = `<strong>Contest ID:</strong> ${contestID} | <strong>Problem Index:</strong> ${problemIndex}<br><br>`;
@@ -198,53 +264,62 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         total_subimssions = okSubmissions.length;
         total_subimssions_memory= okSubmissions.length; 
         // Display time and memory for each OK submission
-        console.log(more_than_user_memo+ " "+total_subimssions_memory)
+        // console.log(more_than_user_memo+ "mem"+total_subimssions_memory)
+        let time_user = targetElement3.textContent.trim().substring(0,4);
+        console.log(time_user);
         okSubmissions.forEach(submission => {
             
             // submissionDetails += `Submission ID: ${submission.id} | 
             //     Time Consumed: ${submission.timeConsumedMillis} ms | 
             //     Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
+            // console.log("Submission ID:", submission.id);
+            // if(submission.id==targetElement2.textContent){
+            //     // console.log("found"+submission.memoryConsumedBytes);
+            //     user_point_memo_text= parseInt(submission.memoryConsumedBytes)/1000;
+            // }
+            console.log("sub "+submission.timeConsumedMillis);
             if(parseInt(submission.memoryConsumedBytes/1000) > parseInt(user_point_memo_text.textContent)){
-                    console.log(submission.memoryConsumedBytes/1000+" "+user_point_memo_text.textContent);
+                console.log(submission.memoryConsumedBytes/1000+" "+user_point_memo_text.textContent);
                     more_than_user_memo++;
-                }
-                else if(parseInt(submission.memoryConsumedBytes/1000) == parseInt(user_point_memo_text.textContent)){
-                    total_subimssions_memory--;
-                }
-                if(parseInt(submission.timeConsumedMillis) > parseInt(targetElement3)){
-                    more_than++;
-                }
-                else if(parseInt(submission.timeConsumedMillis) < parseInt(targetElement3)){
-                    less_than++;
-                }
-                else{
-                    total_subimssions--;
-                }
-                // console.log(submission.memoryConsumedBytes);
-                let memory = submission.memoryConsumedBytes/1000;
-                // If the memory value already exists in the map, increment its count
-                if (store_memory.has(memory)) {
-                    store_memory.set(memory, store_memory.get(memory) + 1);
-                }
-                // Otherwise, add it to the map with a count of 1
-                else {
-                    store_memory.set(memory, 1);
-                }
-                // if(memory==user_point_memo_text.textContent){
-                // }
-                // console.log(memory);
-                if (submission.id == targetElement2.textContent) {
-                    // console.log("Matching submission found:");
-                    // console.log("Submission ID:", submission.id);
-                    console.log("Time Consumed (ms):", submission.timeConsumedMillis);
-                    console.log("Memory consumed (Bytes):", submission.memoryConsumedBytes);
-                    user_point_memo =submission.memoryConsumedBytes/1000;
-                    locate_time=submission.timeConsumedMillis;
-                    bar_number = Math.floor(submission.timeConsumedMillis / 10);
-                    targetX=(Math.floor(submission.timeConsumedMillis / 10))*10;
-                    console.log("x"+targetX);
-                    console.log(bar_number);
-                } 
+            }
+            else if(parseInt(submission.memoryConsumedBytes/1000) == parseInt(user_point_memo_text.textContent)){
+               total_subimssions_memory--;
+            }
+            if(parseInt(submission.timeConsumedMillis) > parseInt(time_user)){
+                console.log(submission.timeConsumedMillis+" "+time_user);
+                more_than++;
+            }
+            else if(parseInt(submission.timeConsumedMillis) < parseInt(time_user)){
+                less_than++;
+            }
+            else{
+                total_subimssions--;
+            }
+            // console.log(submission.memoryConsumedBytes);
+            let memory = submission.memoryConsumedBytes/1000;
+            // If the memory value already exists in the map, increment its count
+            if (store_memory.has(memory)) {
+                store_memory.set(memory, store_memory.get(memory) + 1);
+            }
+            // Otherwise, add it to the map with a count of 1
+            else {
+                store_memory.set(memory, 1);
+            }
+            // if(memory==user_point_memo_text.textContent){
+            // }
+            // console.log(memory);
+            if (submission.id == targetElement2.textContent) {
+                // console.log("Matching submission found:");
+                // console.log("Submission ID:", submission.id);
+                console.log("Time Consumed (ms):", submission.timeConsumedMillis);
+                console.log("Memory consumed (Bytes):", submission.memoryConsumedBytes);
+                user_point_memo =submission.memoryConsumedBytes/1000;
+                locate_time=submission.timeConsumedMillis;
+                bar_number = Math.floor(submission.timeConsumedMillis / 10);
+                targetX=(Math.floor(submission.timeConsumedMillis / 10))*10;
+                console.log("x"+targetX);
+                console.log(bar_number);
+            } 
             // store_memory[submission.memoryConsumedBytes]+=1;
             // Increment counts in time_consumed and map2 based on mod 10
             time_consumed[Math.floor(submission.timeConsumedMillis / 10)] += 1; // Use Math.floor to ensure correct indexing
@@ -385,7 +460,6 @@ function draw_time_graph() {
         border: 1px solid #ccc;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         padding: 10px;
-        margin-top: 20px;
     `;
 
     // Add a canvas element for the graph
@@ -611,7 +685,6 @@ function draw_memory_Graph() {
         border: 1px solid #ccc;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
         padding: 10px;
-        margin-top: 20px;
     `;
 
     // Add a canvas element for the graph
@@ -785,7 +858,7 @@ function draw_memory_Graph() {
 
                 // Draw the box for "You beat X.XX %"
                 // console.log(total_subimssions_memory+ " "+more_than_user_memo);
-                const boxText = `You beat ${(((more_than_user_memo * 100) / total_subimssions_memory).toFixed(2))} %`;
+                const boxText = `You beat ${(((Math.max(more_than_user_memo,0) * 100) / Math.max(total_subimssions_memory,0)).toFixed(2))} %`;
                 ctx.font = "16px Arial";
                 ctx.fillStyle = "#555";
                 ctx.textAlign = "center";
@@ -1013,8 +1086,7 @@ function draw_memory_Graph() {
 // }
 
 
-// Call the function to start the process
-extractContestAndProblem();
+
 
 
 
