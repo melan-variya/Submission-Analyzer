@@ -1,22 +1,26 @@
 {
     "manifest_version": 3,
-    "name": "Codeforces Problem Extractor",
-    "version": "1.0",
-    "description": "Extract contest ID and problem index from Codeforces problem URLs.",
-    "permissions": ["activeTab", "scripting"],
+    "name": "Submission Analyzer",
+    "version": "1.0.0",
+    "description": "Analyze and visualize Codeforces submissions, including time and memory performance.",
+    "permissions": ["activeTab", "scripting", "storage"],
+    "host_permissions": ["https://codeforces.com/*"],
     "background": {
         "service_worker": "background.js"
     },
     "content_scripts": [
         {
-            "matches": [
-                "https://codeforces.com/contest/*/submission/*"
-            ],
-            "js": ["chart.umd.js","content.js"]
+            "matches": ["https://codeforces.com/contest/*/submission/*"],
+            "js": ["chart.umd.js", "content.js"]
         }
     ],
     "action": {
-        "default_title": "Extract Contest Info",
+        "default_title": "Analyze Codeforces Submissions",
         "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "./src/logo-final.png",
+        "48": "./src/logo-final.png",
+        "128": "./src/logo-final.png"
     }
 }
