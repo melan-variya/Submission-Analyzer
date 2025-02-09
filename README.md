@@ -24,8 +24,8 @@ Submission Analyzer is a browser extension designed to analyze and visualize Cod
 ### Steps
 1. **Download the Extension**:
 - Clone this repository or download the ZIP file and extract it.
-
-- git clone https://github.com/your-username/submission-analyzer.git
+- ZIP file https://github.com/melan-variya/Submission-Analyzer/releases/tag/v1.0.0
+- git clone https://github.com/melan-variya/submission-analyzer.git
 
 
 2. **Load the Extension**:
