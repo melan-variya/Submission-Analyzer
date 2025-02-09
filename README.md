@@ -1,6 +1,6 @@
 # Submission Analyzer
 
-![Extension Icon](./src/logo.png) <!-- Add an icon if you have one -->
+<img src="./src/logo.png" alt="Extension Icon" width="100" height="100">
 
 Submission Analyzer is a browser extension designed to analyze and visualize Codeforces submissions, including time and memory performance. It provides detailed insights into your submissions and helps you understand your code's efficiency.
 
@@ -50,7 +50,6 @@ Submission Analyzer is a browser extension designed to analyze and visualize Cod
 
 ## Screenshots
 
-## Screenshots
 
 ![Screenshot 1](./src/1.png)
 ![Screenshot 2](./src/2.png)
@@ -63,7 +62,6 @@ Submission Analyzer is a browser extension designed to analyze and visualize Cod
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Charting Library**: [Chart.js](https://www.chartjs.org/)
-- **Browser APIs**: Chrome Extensions API
 - **Codeforces API**: Used to fetch submission data.
 
 ---
@@ -94,7 +92,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/your-username/submission-analyzer/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/melan-variya/submission-analyzer/issues) on GitHub.
 
 ---
 
