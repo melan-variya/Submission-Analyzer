@@ -2,7 +2,7 @@
 
 <img src="./src/logo.png" alt="Extension Icon" width="100" height="100">
 
-Submission Analyzer is a browser extension designed to analyze and visualize Codeforces submissions, including time and memory performance. It provides detailed insights into your submissions and helps you understand your code's efficiency.
+Submission Analyzer is a browser extension designed to analyze and visualize Codeforces submissions, including time and memory performance. It allows users to view others' code, compare solutions, and optimize their own code for better efficiency.
 
 ---
 
