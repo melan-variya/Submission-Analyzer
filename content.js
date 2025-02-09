@@ -54,7 +54,7 @@ if (window.location.href.match(/^https:\/\/codeforces\.com\/contest\/\d+\/submis
     const is_accepted = is_accepted_res.singleNodeValue;
     console.log("target2"+is_accepted.textContent);
 
-    if(username_login.textContent==username_sub.textContent && is_accepted.textContent=="Accepted"){
+    if(username_sub.textContent==username_login.textContent && is_accepted.textContent=="Accepted"){
         console.log("Submission page detected.");
         extractContestAndProblem();
     }
