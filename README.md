@@ -92,8 +92,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/melan-variya/submission-analyzer/issues) on GitHub.
-If you find this project helpful, please consider starring ⭐ the repository! It helps others discover the project.
+If you encounter any issues or have questions, please [open an issue](https://github.com/melan-variya/submission-analyzer/issues) on GitHub.  
+If you find this project helpful, please consider starring ⭐ the repository! It helps others discover the project.  
+
 ---
 
 **Happy Coding!** 🚀
