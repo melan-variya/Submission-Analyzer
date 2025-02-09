@@ -42,20 +42,16 @@ if (window.location.href.match(/^https:\/\/codeforces\.com\/contest\/\d+\/submis
     const xpath_username ='//*[@id="header"]/div[2]/div[2]/a[1]'
     const username_res = document.evaluate(xpath_username, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     const username_login = username_res.singleNodeValue;
-    console.log("target2"+username_login.textContent);
 
     const xpath_username_sub ='//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[2]/a'
     const username_sub_res = document.evaluate(xpath_username_sub, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     const username_sub = username_sub_res.singleNodeValue;
-    console.log("target2"+username_sub.textContent);
 
     const xpath_is_accepted = '//*[@id="pageContent"]/div[2]/div[6]/table/tbody/tr[2]/td[5]/span'
     const is_accepted_res = document.evaluate(xpath_is_accepted, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
     const is_accepted = is_accepted_res.singleNodeValue;
-    console.log("target2"+is_accepted.textContent);
 
     if(username_sub.textContent==username_login.textContent && is_accepted.textContent=="Accepted"){
-        console.log("Submission page detected.");
         extractContestAndProblem();
     }
 }
@@ -74,7 +70,6 @@ function extractContestAndProblem() {
         const element = result.singleNodeValue;
         const href = element.getAttribute('href'); // Get the href attribute
         contest_problem = "https://codeforces.com" + href;
-        console.log("link:", contest_problem);
     } else {
         console.error("Element not found for the given XPath.");
         return;
@@ -88,13 +83,10 @@ function extractContestAndProblem() {
         // For URLs like: https://codeforces.com/problemset/problem/{contestID}/{problemIndex}
         contestID = pathParts[3];
         problemIndex = pathParts[4];
-        console.log("contestID:", contestID);
     } else if (pathParts.includes("contest")) {
         // For URLs like: https://codeforces.com/contest/{contestID}/problem/{problemIndex}
         contestID = pathParts[2];
         problemIndex = pathParts[4];
-        console.log("contestID:", contestID);
-        console.log("problem index:", problemIndex);
     }
     
     // Call API to fetch submissions data and process it
@@ -286,29 +278,16 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
         total_subimssions = okSubmissions.length;
         total_subimssions_memory= okSubmissions.length; 
         // Display time and memory for each OK submission
-        // console.log(more_than_user_memo+ "mem"+total_subimssions_memory)
         let time_user = targetElement3.textContent.trim().substring(0,4);
-        console.log(time_user);
         okSubmissions.forEach(submission => {
-            
-            // submissionDetails += `Submission ID: ${submission.id} | 
-            //     Time Consumed: ${submission.timeConsumedMillis} ms | 
-            //     Memory Consumed: ${(submission.memoryConsumedBytes)}<br>`;
-            // console.log("Submission ID:", submission.id);
-            // if(submission.id==targetElement2.textContent){
-            //     // console.log("found"+submission.memoryConsumedBytes);
-            //     user_point_memo_text= parseInt(submission.memoryConsumedBytes)/1000;
-            // }
-            // console.log("sub "+submission.timeConsumedMillis);
+
             if(parseInt(submission.memoryConsumedBytes/1000) > parseInt(user_point_memo_text.textContent)){
-                // console.log(submission.memoryConsumedBytes/1000+" "+user_point_memo_text.textContent);
-                    more_than_user_memo++;
+                more_than_user_memo++;
             }
             else if(parseInt(submission.memoryConsumedBytes/1000) == parseInt(user_point_memo_text.textContent)){
                total_subimssions_memory--;
             }
             if(parseInt(submission.timeConsumedMillis) > parseInt(time_user)){
-                // console.log(submission.timeConsumedMillis+" "+time_user);
                 more_than++;
             }
             else if(parseInt(submission.timeConsumedMillis) < parseInt(time_user)){
@@ -317,7 +296,6 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             else{
                 total_subimssions--;
             }
-            // console.log(submission.memoryConsumedBytes);
             let memory = submission.memoryConsumedBytes/1000;
             // If the memory value already exists in the map, increment its count
             if (store_memory.has(parseInt(memory/100))) {
@@ -327,25 +305,15 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             else {
                 store_memory.set(parseInt(memory/100), 1);
             }
-            // if(memory==user_point_memo_text.textContent){
-            // }
-            // console.log(memory);
             if (submission.id == targetElement2.textContent) {
-                // console.log("Matching submission found:");
-                // console.log("Submission ID:", submission.id);
-                console.log("Time Consumed (ms):", submission.timeConsumedMillis);
-                console.log("Memory consumed (Bytes):", submission.memoryConsumedBytes);
                 user_point_memo =submission.memoryConsumedBytes/1000;
                 locate_time=submission.timeConsumedMillis;
                 bar_number = Math.floor(submission.timeConsumedMillis / 10);
                 targetX=(Math.floor(submission.timeConsumedMillis / 10))*10;
-                console.log("x"+targetX);
-                console.log(bar_number);
             } 
-            // store_memory[submission.memoryConsumedBytes]+=1;
-            // Increment counts in time_consumed and map2 based on mod 10
+
             time_consumed[Math.floor(submission.timeConsumedMillis / 10)] += 1; // Use Math.floor to ensure correct indexing
-            // map2[Math.floor(submission.memoryConsumedBytes / 10)] += 1; // Same here
+            
             if(submission_id[Math.floor(submission.timeConsumedMillis / 10)] == 0) {
                 submission_id[Math.floor(submission.timeConsumedMillis / 10)] = submission.id;
                 sub_id_cod[submission.timeConsumedMillis]=submission.id;
@@ -354,7 +322,6 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
             else{
                 let time_temp=submission.timeConsumedMillis;
                 let temp2 = sub_id_cod2[Math.floor(submission.timeConsumedMillis / 10)];
-                // console.log(time_temp+" "+temp2);
                 if(Number(time_temp)<Number(temp2)){
                     submission_id[Math.floor(submission.timeConsumedMillis / 10)] = submission.id;
                     sub_id_cod[submission.timeConsumedMillis]=submission.id;
@@ -370,7 +337,6 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 let memory_temp = submission.memoryConsumedBytes;
                 let temp2_memo = sub_id_cod2_memo[Math.floor(submission.memoryConsumedBytes / 100000)*100];
                 if(memory_temp != temp2_memo)
-                    console.log(memory_temp+" "+temp2_memo);
                 if (Number(memory_temp) < Number(temp2_memo)) {
                     submission_id_memo[Math.floor(submission.memoryConsumedBytes / 100000)*100] = submission.id;
                     sub_id_cod_memo[submission.memoryConsumedBytes] = submission.id;
@@ -378,35 +344,13 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 }
             }
             
-            // if(sub_id_cod_memo.has(submission.memoryConsumedBytes)){
-            //     let temp=sub_id_cod_memo.get(submission.memoryConsumedBytes);
-            //     if(Number(submission.memoryConsumedBytes)<Number(temp)){
-            //         sub_id_cod_memo.set(submission.memoryConsumedBytes,submission.id);
-            //         sub_id_cod_memo2.set(submission.memoryConsumedBytes/1000,submission.id);
-            //     }
-            // }
-            // else{
-            //     sub_id_cod_memo.set(submission.memoryConsumedBytes,submission.id);
-            //     sub_id_cod_memo2.set(submission.memoryConsumedBytes/1000,submission.id);
-            // }
 
         });
         
-        console.log(submission_id);
-        console.log(submission_id_memo);
-        console.log(sub_id_cod_memo);
-        console.log(sub_id_cod2_memo);
-
-        // console.log(sub_id_cod);
-        // console.log(sub_id_cod2);
-        // console.log(store_memory);
-        console.log("sub_id"+submission_id);
         submission_id_memo.forEach((value , index)=>{
             if(value!=0){
-                // console.log(value+" "+index);
                 if(submission_id_code_memp.has(index)){
                     let temp=submission_id_code_memp.get(index);
-                    console.log(Number(value)+" "+Number(temp));
                     if(Number(value)<Number(temp)){
                         submission_id_code_memp.set(index,value);
                     }
@@ -415,18 +359,14 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 else{
                     submission_id_code_memp.set(index,value);
                 }
-                // console.log("val"+value+"ind"+index);
                 memory_limit.push(index);
             }
         });
         submission_id.forEach((value , index)=>{
 
             if(value!=0){
-                // submission_id_code[index*10]=value;
-                // console.log(submission_id_code);
                 if(submission_id_code.has(index*10)){
                     let temp=submission_id_code.get(index*10);
-                    console.log(Number(value)+" "+Number(temp));
                     if(Number(value)<Number(temp)){
                         submission_id_code.set(index*10,value);
                     }
@@ -435,82 +375,27 @@ function displayOkSubmissionDetails(submissions, contestID, problemIndex) {
                 else{
                     submission_id_code.set(index*10,value);
                 }
-                // console.log("val"+value+"ind"+index);
                 time_limit.push(index*10);
             }
         });
-        console.log(submission_id_code);
 
-        console.log(more_than+" "+less_than +" "+total_subimssions);
-        console.log("percent "+(more_than*100)/total_subimssions);
-        console.log("Memo"+total_subimssions_memory+ " "+more_than_user_memo);
-        // let submissionDetails = `Submission-Analyzer <br><br><div style="border: 2px solid black; padding: 10px; display: inline-block;">You beat ${(((more_than * 100) / total_subimssions).toFixed(2))} %</div><br>`;
-        // finding location of bar for printing photo
-        let cou=0;
-        for (let index = 0; index < bar_number; index++) {
-            const element = time_consumed[index];
-            if(element==0){
-                cou++;
-            }
-            
-        }
-        if(cou){
-            cou--;
-        }
-        bar_number-=cou;
-        // Add counts for time consumed
-        // submissionDetails += "<strong>Time Consumed Distribution:</strong><br>";
         time_consumed.forEach((value, index) => {
             max_time=Math.max(max_time,value);
-            // submissionDetails += `Time Consumed Mod ${index}: ${value} occurrences<br>`;
         });
-        // submissionDetails += "<br>";
         submission_id.forEach(sub_id);
         function sub_id(value , index){
             relative_to_max[index] = (4*time_consumed[index])/max_time;
-            // submissionDetails += `Submission ID Mod ${index}: ${value} : ${relative_to_max[index]}<br>`;
-            // submissionDetails += `${submission_id[index]}<br>`;
         }
         
-        // submissionDetails+= "<br>";
-        // submissionDetails = "<strong>Submission ID Distribution:</strong><br>";
-        // submissionDetails+= "<br>";
-        // submissionDetails+=draw_graph();
-        // Add counts for memory consumed
-        // submissionDetails += "<strong>Memory Consumed Distribution:</strong><br>";
-        // map2.forEach((value, index) => {
-            // submissionDetails += `Memory Consumed Mod ${index}: ${value} occurrences<br>`;
-        // });
-
-        // if (okSubmissions.length === 0) {
-        //     submissionDetails = "<strong>No successful submissions (OK verdict) found.</strong><br>";
-        // }
-
-        // newElement.innerHTML += submissionDetails;
-
-        // Append the new element to the target element
         targetElement.appendChild(newElement);
 
-        // Add count of successful submissions
-        // const countElement = document.createElement('div');
-        // countElement.style.fontSize = '16px';
-        // countElement.style.fontWeight = 'bold';
-        // countElement.style.color = '#007bff';
-        // countElement.style.marginTop = '10px';
-        // countElement.innerHTML = `<strong>Total Successful Submissions (OK verdict):</strong> ${okSubmissions.length}`;
-        // targetElement.appendChild(countElement);
-        // draw_graph();
         draw_time_graph();
         draw_memory_Graph();
         
     } else {
         console.error("Target element not found.");
     }
-    store_memory.forEach((key,value)=>{
-        if(!key){
-            console.log(key+" "+value);
-        }
-    })
+    
 }
 
 
@@ -628,8 +513,6 @@ function draw_time_graph() {
         return indices;
     }, []);
 
-    console.log("Non-zero indices count:", nonZeroIndices.length);
-    console.log("Time limit count:", time_limit.length);
 
     // Locate the target element using XPath
     const xpath = "//*[@id='pageContent']/div[2]";
@@ -643,7 +526,6 @@ function draw_time_graph() {
 
     // Get the target element's width
     const targetWidth = targetElement.offsetWidth;
-    console.log(targetX);
 
     // Create a container for the graph
     const container = document.createElement("div");
