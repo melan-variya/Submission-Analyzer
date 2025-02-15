@@ -1,4 +1,4 @@
-#Codeforces Submission Analyzer
+# Codeforces Submission Analyzer
 
 <img src="./src/logo.png" alt="Extension Icon" width="100" height="100">
 
