@@ -1,8 +1,8 @@
-# Submission Analyzer
+#Codeforces Submission Analyzer
 
 <img src="./src/logo.png" alt="Extension Icon" width="100" height="100">
 
-Submission Analyzer is a browser extension designed to analyze and visualize Codeforces submissions, including time and memory performance. It allows users to view others' code, compare solutions, and optimize their own code for better efficiency.
+Codeforces Submission Analyzer is a browser extension designed to analyze and visualize Codeforces submissions, including time and memory performance. It allows users to view others' code, compare solutions, and optimize their own code for better efficiency.
 
 ---
 
@@ -24,8 +24,8 @@ Submission Analyzer is a browser extension designed to analyze and visualize Cod
 ### Steps
 1. **Download the Extension**:
 - Clone this repository or download the ZIP file and extract it.
-- ZIP file https://github.com/melan-variya/Submission-Analyzer/releases/tag/v1.0.0
-- git clone https://github.com/melan-variya/submission-analyzer.git
+- ZIP file https://github.com/melan-variya/Codeforces-Submission-Analyzer/releases/tag/v1.0.0
+- git clone https://github.com/melan-variya/Codeforces-Submission-Analyzer.git
 
 
 2. **Load the Extension**:
@@ -35,7 +35,7 @@ Submission Analyzer is a browser extension designed to analyze and visualize Cod
 
 3. **Pin the Extension**:
 - Click the puzzle icon in the top-right corner of your browser.
-- Find **Submission Analyzer** and pin it to the toolbar.
+- Find **Codeforces-Submission-Analyzer** and pin it to the toolbar.
 
 ---
 
@@ -92,7 +92,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/melan-variya/submission-analyzer/issues) on GitHub.  
+If you encounter any issues or have questions, please [open an issue](https://github.com/melan-variya/Codeforces-Submission-Analyzer/issues) on GitHub.  
 If you find this project helpful, please consider starring ⭐ the repository! It helps others discover the project.  
 
 ---
