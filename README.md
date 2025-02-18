@@ -20,6 +20,7 @@ Codeforces Submission Analyzer is a browser extension designed to analyze and vi
 
 ### Prerequisites
 - A Chromium-based browser (e.g., Google Chrome, Microsoft Edge, Brave).
+- For Firefox: https://addons.mozilla.org/en-US/firefox/addon/codeforces-submission-analyzer/
 
 ### Steps
 1. **Download the Extension**:
